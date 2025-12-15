@@ -114,38 +114,68 @@ npm run preview
 
 ## API Endpoints
 
-### User Management
-- `POST /api/users` - Create a new user
+### User Management (`/api/users`)
+
+**GET Endpoints** (Accessible from browser):
+- `GET /api/users` - Get all users
 - `GET /api/users/{id}` - Get user by ID
 - `GET /api/users/email/{email}` - Get user by email
-- `PUT /api/users/{id}` - Update user
-- `DELETE /api/users/{id}` - Delete user
-- `POST /api/users/authenticate` - Authenticate user
+- `GET /api/users/role/{role}` - Get users by role (ADMIN, ANALYST, VIEWER)
 
-### Document Upload
-- `POST /api/documents/upload` - Upload a document
+**POST/PUT/DELETE Endpoints**:
+- `POST /api/users` - Create a new user
+- `POST /api/users/login` - User login (requires email & password)
+- `POST /api/users/authenticate` - Authenticate user (requires email & password)
+- `POST /api/users/{id}/activate` - Activate user account
+- `POST /api/users/{id}/deactivate` - Deactivate user account
+- `PUT /api/users/{id}` - Update user details
+- `DELETE /api/users/{id}` - Delete user
+
+### Document Upload & Management (`/api/documents`)
+
+**GET Endpoints** (Accessible from browser):
 - `GET /api/documents/{id}` - Get document details
 - `GET /api/documents/user/{userId}` - Get user's documents
-- `PUT /api/documents/{id}/status` - Update processing status
-- `DELETE /api/documents/{id}` - Delete document
-- `POST /api/documents/{id}/extract-text` - Extract text from document
+- `GET /api/documents/status/{status}` - Get documents by processing status (PENDING, PROCESSING, COMPLETED, FAILED)
 
-### Classification
-- `POST /api/classifications/classify/{documentId}` - Classify document
-- `GET /api/classifications/{documentId}` - Get classification
-- `GET /api/classifications/category/{category}` - Filter by category
-- `GET /api/classifications/high-confidence/{minConfidence}` - Get high confidence classifications
-- `PUT /api/classifications/{id}` - Update classification
+**POST/PUT/DELETE Endpoints**:
+- `POST /api/documents/upload` - Upload a document (multipart/form-data: file, userId)
+- `POST /api/documents/{id}/extract-text` - Extract text from document
+- `PUT /api/documents/{id}/status` - Update document processing status
+- `DELETE /api/documents/{id}` - Delete document
+
+### Document Analysis (`/api`)
+
+**POST Endpoints**:
+- `POST /api/analyze` - Analyze document (requires JSON body with AnalysisRequest)
+
+### Classification (`/api/classifications`)
+
+**GET Endpoints** (Accessible from browser):
+- `GET /api/classifications/{documentId}` - Get latest classification for document
+- `GET /api/classifications/category/{category}` - Get classifications by category (e.g., CONFIDENTIAL, SENSITIVE, PUBLIC)
+- `GET /api/classifications/high-confidence/{minConfidence}` - Get high confidence classifications (0.0-1.0)
 - `GET /api/classifications/{id}/validate` - Validate classification accuracy
 
-### Risk Analysis
-- `POST /api/risk-analysis/analyze/{documentId}` - Analyze document risk
-- `GET /api/risk-analysis/{documentId}` - Get risk analysis
-- `GET /api/risk-analysis/level/{riskLevel}` - Filter by risk level
-- `GET /api/risk-analysis/high-risk/{minScore}` - Get high risk documents
-- `GET /api/risk-analysis/unreviewed` - Get unreviewed analyses
-- `POST /api/risk-analysis/{id}/review` - Review and approve analysis
-- `PUT /api/risk-analysis/{id}/risk-level` - Update risk level
+**POST/PUT/DELETE Endpoints**:
+- `POST /api/classifications/classify/{documentId}` - Classify document using LLM
+- `PUT /api/classifications/{id}` - Update classification category
+- `DELETE /api/classifications/{id}` - Delete classification
+
+### Risk Analysis (`/api/risk-analysis`)
+
+**GET Endpoints** (Accessible from browser):
+- `GET /api/risk-analysis/{documentId}` - Get risk analysis for document
+- `GET /api/risk-analysis/level/{riskLevel}` - Get analyses by risk level (LOW, MEDIUM, HIGH, CRITICAL)
+- `GET /api/risk-analysis/high-risk/{minScore}` - Get high risk analyses (score >= minScore)
+- `GET /api/risk-analysis/unreviewed` - Get all unreviewed risk analyses
+- `GET /api/risk-analysis/framework/{framework}` - Get analyses by framework (OWASP, PCI-DSS, HIPAA, etc.)
+- `GET /api/risk-analysis/reviewed-by/{userId}` - Get analyses reviewed by specific user
+
+**POST/PUT Endpoints**:
+- `POST /api/risk-analysis/analyze/{documentId}` - Analyze document risk using selected framework
+- `POST /api/risk-analysis/{id}/review` - Review and approve risk analysis (requires reviewerUserId, optional reviewNotes)
+- `PUT /api/risk-analysis/{id}/risk-level` - Update risk level for analysis
 
 ## TODO: Implementation Areas
 

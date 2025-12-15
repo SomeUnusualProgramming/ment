@@ -21,4 +21,6 @@ public interface RiskAnalysisRepository extends JpaRepository<RiskAnalysis, Long
     List<RiskAnalysis> findByFramework(RiskAnalysis.AnalysisFramework framework);
 
     List<RiskAnalysis> findByReviewedByUserId(Long userId);
+
+    List<RiskAnalysis> findByDocumentUploadedByIdAndReviewedFalse(Long userId);
 }

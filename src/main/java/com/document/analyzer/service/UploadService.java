@@ -11,6 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -171,6 +175,11 @@ public class UploadService {
             return new String(file.getBytes(), StandardCharsets.UTF_8);
         } else if (lowerName.endsWith(".json") || lowerName.endsWith(".csv")) {
             return new String(file.getBytes(), StandardCharsets.UTF_8);
+        } else if (lowerName.endsWith(".pdf")) {
+            try (PDDocument document = Loader.loadPDF(file.getBytes())) {
+                PDFTextStripper stripper = new PDFTextStripper();
+                return stripper.getText(document);
+            }
         }
         return "Document content extraction not yet implemented for this file type.";
     }
@@ -181,6 +190,11 @@ public class UploadService {
             return Files.readString(file.toPath(), StandardCharsets.UTF_8);
         } else if (fileName.endsWith(".json") || fileName.endsWith(".csv")) {
             return Files.readString(file.toPath(), StandardCharsets.UTF_8);
+        } else if (fileName.endsWith(".pdf")) {
+            try (PDDocument document = Loader.loadPDF(file)) {
+                PDFTextStripper stripper = new PDFTextStripper();
+                return stripper.getText(document);
+            }
         }
         return "Document content extraction not yet implemented for this file type.";
     }
