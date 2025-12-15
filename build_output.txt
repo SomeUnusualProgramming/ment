@@ -1,0 +1,34 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------< com.document:document-analyzer >-------------------
+[INFO] Building Document Analyzer 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ document-analyzer ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ document-analyzer ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ document-analyzer ---
+[INFO] skip non existing resourceDirectory C:\Users\Adam\IdeaProjects\ment\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ document-analyzer ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- surefire:3.0.0-M9:test (default-test) @ document-analyzer ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.3.0:jar (default-jar) @ document-analyzer ---
+[INFO] 
+[INFO] --- spring-boot:3.2.0:repackage (repackage) @ document-analyzer ---
+[INFO] Replacing main artifact C:\Users\Adam\IdeaProjects\ment\target\document-analyzer-1.0.0.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+[INFO] The original artifact has been renamed to C:\Users\Adam\IdeaProjects\ment\target\document-analyzer-1.0.0.jar.original
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.754 s
+[INFO] Finished at: 2025-12-14T16:18:53+01:00
+[INFO] ------------------------------------------------------------------------
