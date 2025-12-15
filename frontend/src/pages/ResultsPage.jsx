@@ -13,6 +13,7 @@ function ResultsPage() {
   const [riskAnalysis, setRiskAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reviewLoading, setReviewLoading] = useState(false);
+  const [showTextModal, setShowTextModal] = useState(false);
 
   useEffect(() => {
     fetchResults();
@@ -201,6 +202,41 @@ function ResultsPage() {
     }
   };
 
+  const handleExportText = () => {
+    try {
+      if (!documentData?.extractedText) {
+        toast.error('No extracted text to export');
+        return;
+      }
+
+      let textContent = '═══════════════════════════════════════════════════════════════\n';
+      textContent += '                    EXTRACTED TEXT\n';
+      textContent += '═══════════════════════════════════════════════════════════════\n\n';
+      
+      textContent += `Document: ${documentData.fileName}\n`;
+      textContent += `Extracted: ${new Date().toLocaleString('pl-PL')}\n`;
+      textContent += '───────────────────────────────────────────────────────────────\n\n';
+      
+      textContent += documentData.extractedText;
+      
+      textContent += '\n\n═══════════════════════════════════════════════════════════════\n';
+      
+      const dataBlob = new Blob([textContent], { type: 'text/plain; charset=utf-8' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = `extracted_text_${documentId}_${new Date().getTime()}.txt`;
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success('Text exported successfully');
+    } catch (error) {
+      console.error('Export text error:', error);
+      toast.error('Failed to export text: ' + error.message);
+    }
+  };
+
   const handleReturnToDashboard = () => {
     navigate('/');
   };
@@ -300,9 +336,41 @@ function ResultsPage() {
 
       {documentData?.extractedText && (
         <div className="extracted-text-section">
-          <h2>📄 Extracted Text</h2>
+          <div className="extracted-text-header">
+            <h2>📄 Extracted Text</h2>
+            <div className="extracted-text-actions">
+              <button className="action-btn secondary-btn" onClick={() => setShowTextModal(true)}>
+                👁️ View Full Text
+              </button>
+              <button className="action-btn primary-btn" onClick={handleExportText}>
+                💾 Export Text
+              </button>
+            </div>
+          </div>
           <div className="text-preview">
             {documentData.extractedText.substring(0, 500)}...
+          </div>
+        </div>
+      )}
+
+      {showTextModal && (
+        <div className="text-modal-overlay" onClick={() => setShowTextModal(false)}>
+          <div className="text-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="text-modal-header">
+              <h2>📄 Full Extracted Text</h2>
+              <button className="close-btn" onClick={() => setShowTextModal(false)}>✕</button>
+            </div>
+            <div className="text-modal-body">
+              <pre>{documentData?.extractedText}</pre>
+            </div>
+            <div className="text-modal-footer">
+              <button className="action-btn primary-btn" onClick={handleExportText}>
+                💾 Export This Text
+              </button>
+              <button className="action-btn secondary-btn" onClick={() => setShowTextModal(false)}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

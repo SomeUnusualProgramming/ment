@@ -78,4 +78,10 @@ public class RiskAnalysisController {
         List<RiskAnalysis> analyses = riskAnalysisService.getAnalysesReviewedBy(userId);
         return ResponseEntity.ok(analyses);
     }
+
+    @GetMapping("/pending-user/{userId}")
+    public ResponseEntity<List<RiskAnalysis>> getPendingReviewsForUser(@PathVariable Long userId) {
+        List<RiskAnalysis> analyses = riskAnalysisService.getPendingReviewsForUser(userId);
+        return ResponseEntity.ok(analyses);
+    }
 }
