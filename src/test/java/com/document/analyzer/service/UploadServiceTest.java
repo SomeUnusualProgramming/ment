@@ -79,7 +79,7 @@ public class UploadServiceTest {
         assertEquals("test.pdf", document.getFileName());
         assertEquals(Document.DocumentType.PDF, document.getDocumentType());
         verify(userRepository, times(1)).findById(1L);
-        verify(documentRepository, times(1)).save(any(Document.class));
+        verify(documentRepository, times(2)).save(any(Document.class));
     }
 
     @Test

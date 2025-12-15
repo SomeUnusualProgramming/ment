@@ -34,7 +34,7 @@ function App() {
   };
 
   return (
-    <Router>
+    <Router future={{ v7_relativeSplatPath: true }}>
       <div className="App">
         <Navigation isAuthenticated={isAuthenticated} userRole={userRole} onLogout={handleLogout} />
         {isAuthenticated ? (

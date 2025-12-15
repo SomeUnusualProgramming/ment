@@ -70,11 +70,12 @@ export const riskAnalysisAPI = {
   getByRiskLevel: (level) => api.get(`/risk-analysis/level/${level}`),
   getHighRisk: (minScore) => api.get(`/risk-analysis/high-risk/${minScore}`),
   getUnreviewed: () => api.get('/risk-analysis/unreviewed'),
-  reviewAnalysis: (id, reviewerUserId, notes) => {
-    TODO_ADD_REVIEW_ENDPOINT();
-    return api.post(`/risk-analysis/${id}/review`, {
-      reviewerUserId,
-      reviewNotes: notes
+  reviewAnalysis: (id, reviewerUserId, notes = 'Review requested by user') => {
+    return api.post(`/risk-analysis/${id}/review`, null, {
+      params: {
+        reviewerUserId,
+        reviewNotes: notes
+      }
     });
   },
   updateRiskLevel: (id, newLevel) => api.put(`/risk-analysis/${id}/risk-level`, { newLevel }),
