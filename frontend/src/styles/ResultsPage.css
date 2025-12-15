@@ -90,6 +90,31 @@
   margin-bottom: 0.5rem;
 }
 
+.risk-list,
+.mitigation-list {
+  list-style-position: inside;
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.risk-list li,
+.mitigation-list li {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+  color: #555;
+  padding-left: 0.5rem;
+}
+
+.risk-list li::marker {
+  color: #ea580c;
+  font-weight: bold;
+}
+
+.mitigation-list li::marker {
+  color: #16a34a;
+  font-weight: bold;
+}
+
 .framework-badge {
   background: #f0f9ff;
   padding: 0.75rem 1rem;
@@ -132,9 +157,14 @@
   border: 1px solid #ddd;
 }
 
-.action-btn:hover {
+.action-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .extracted-text-section {
