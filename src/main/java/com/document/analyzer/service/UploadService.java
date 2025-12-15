@@ -1,6 +1,7 @@
 package com.document.analyzer.service;
 
 import com.document.analyzer.entity.Document;
+import com.document.analyzer.entity.RiskAnalysis;
 import com.document.analyzer.entity.User;
 import com.document.analyzer.repository.DocumentRepository;
 import com.document.analyzer.repository.UserRepository;
@@ -12,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,6 +28,8 @@ public class UploadService {
 
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
+    private final ClassificationService classificationService;
+    private final RiskAnalysisService riskAnalysisService;
 
     @Value("${app.document.upload-dir}")
     private String uploadDir;
@@ -48,10 +52,20 @@ public class UploadService {
                 .documentType(inferDocumentType(file.getOriginalFilename()))
                 .extractedText(extractedText)
                 .uploadedBy(user)
-                .processingStatus(Document.ProcessingStatus.COMPLETED)
+                .processingStatus(Document.ProcessingStatus.PROCESSING)
                 .build();
 
-        return documentRepository.save(document);
+        Document savedDocument = documentRepository.save(document);
+
+        try {
+            classificationService.classifyDocument(savedDocument.getId());
+            riskAnalysisService.analyzeDocumentRisk(savedDocument.getId(), RiskAnalysis.AnalysisFramework.OWASP);
+            savedDocument.setProcessingStatus(Document.ProcessingStatus.COMPLETED);
+        } catch (Exception e) {
+            savedDocument.setProcessingStatus(Document.ProcessingStatus.FAILED);
+        }
+
+        return documentRepository.save(savedDocument);
     }
 
     public Optional<Document> getDocumentById(Long id) {
@@ -154,9 +168,9 @@ public class UploadService {
         
         String lowerName = fileName.toLowerCase();
         if (lowerName.endsWith(".txt")) {
-            return new String(file.getBytes());
+            return new String(file.getBytes(), StandardCharsets.UTF_8);
         } else if (lowerName.endsWith(".json") || lowerName.endsWith(".csv")) {
-            return new String(file.getBytes());
+            return new String(file.getBytes(), StandardCharsets.UTF_8);
         }
         return "Document content extraction not yet implemented for this file type.";
     }
@@ -164,9 +178,9 @@ public class UploadService {
     private String extractTextFromDocument(File file) throws IOException {
         String fileName = file.getName().toLowerCase();
         if (fileName.endsWith(".txt")) {
-            return Files.readString(file.toPath());
+            return Files.readString(file.toPath(), StandardCharsets.UTF_8);
         } else if (fileName.endsWith(".json") || fileName.endsWith(".csv")) {
-            return Files.readString(file.toPath());
+            return Files.readString(file.toPath(), StandardCharsets.UTF_8);
         }
         return "Document content extraction not yet implemented for this file type.";
     }

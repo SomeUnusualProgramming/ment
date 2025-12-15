@@ -58,6 +58,18 @@ function DashboardPage({ userRole }) {
     return colors[status] || '#666';
   };
 
+  const deleteDocument = async (id) => {
+    if (window.confirm('Are you sure you want to delete this document?')) {
+      try {
+        await axios.delete(`http://localhost:8080/api/documents/${id}`);
+        toast.success('Document deleted successfully');
+        fetchDashboardData();
+      } catch (error) {
+        toast.error('Failed to delete document: ' + error.message);
+      }
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading dashboard...</div>;
   }
@@ -131,6 +143,13 @@ function DashboardPage({ userRole }) {
                       <Link to={`/results/${doc.id}`} className="view-link">
                         View
                       </Link>
+                      <button 
+                        onClick={() => deleteDocument(doc.id)} 
+                        className="delete-link"
+                        style={{ marginLeft: '10px', color: '#dc2626', cursor: 'pointer', border: 'none', background: 'none', textDecoration: 'underline' }}
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}

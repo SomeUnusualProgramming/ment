@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -75,6 +74,9 @@ public class ClassificationService {
         String fileName = document.getFileName() != null ? document.getFileName().toLowerCase() : "";
         String extractedText = document.getExtractedText() != null ? document.getExtractedText().toLowerCase() : "";
         
+        if (isJsonFile(fileName, extractedText)) {
+            return Classification.DocumentCategory.OTHER;
+        }
         if (fileName.contains("contract") || extractedText.contains("contract") || extractedText.contains("agreement")) {
             return Classification.DocumentCategory.CONTRACT;
         }
@@ -96,13 +98,40 @@ public class ClassificationService {
         return Classification.DocumentCategory.OTHER;
     }
 
+    private boolean isJsonFile(String fileName, String extractedText) {
+        if (fileName.endsWith(".json")) {
+            return true;
+        }
+        if (extractedText != null && extractedText.trim().startsWith("{") && extractedText.contains(":")) {
+            return true;
+        }
+        return false;
+    }
+
     private float generateConfidenceScore(String fileName) {
-        int hashCode = fileName != null ? fileName.hashCode() : 0;
-        Random random = new Random(Math.abs(hashCode));
-        return 0.70f + (random.nextFloat() * 0.25f);
+        if (fileName != null && fileName.toLowerCase().endsWith(".json")) {
+            return 0.95f;
+        }
+        if (fileName == null || fileName.isBlank()) {
+            return 0.45f;
+        }
+        
+        int matchScore = 0;
+        String lower = fileName.toLowerCase();
+        if (lower.contains("contract")) matchScore += 30;
+        if (lower.contains("invoice")) matchScore += 30;
+        if (lower.contains("report")) matchScore += 25;
+        if (lower.contains("policy")) matchScore += 25;
+        if (lower.contains("form")) matchScore += 20;
+        if (lower.contains("agreement")) matchScore += 30;
+        
+        return Math.min(1.0f, 0.50f + (matchScore / 200.0f));
     }
 
     private String generateClassificationReason(Classification.DocumentCategory category, String fileName) {
+        if (category == Classification.DocumentCategory.OTHER && fileName != null && fileName.toLowerCase().endsWith(".json")) {
+            return "Document '" + fileName + "' is a JSON data file. Detected as structured data format.";
+        }
         return String.format("Document '%s' has been classified as %s based on content analysis and document structure.",
                 fileName, category.toString());
     }
