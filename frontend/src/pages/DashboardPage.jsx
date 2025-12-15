@@ -22,30 +22,45 @@ function DashboardPage({ userRole }) {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      TODO_FETCH_USER_DOCUMENTS();
-      TODO_FETCH_RISK_ANALYSES();
-      TODO_CALCULATE_DASHBOARD_STATISTICS();
+      const userId = parseInt(localStorage.getItem('userId') || '1', 10);
 
-      const userId = TODO_GET_CURRENT_USER_ID();
-      const [docsRes, riskRes] = await Promise.all([
+      const [docsRes, pendingRes] = await Promise.all([
         axios.get(`http://localhost:8080/api/documents/user/${userId}`),
-        axios.get(`http://localhost:8080/api/risk-analysis/unreviewed`)
+        axios.get(`http://localhost:8080/api/risk-analysis/pending-user/${userId}`)
       ]);
 
       setDocuments(docsRes.data);
-      setAnalyses(riskRes.data);
+      setAnalyses(pendingRes.data);
 
       setStats({
         totalDocuments: docsRes.data.length,
         completedAnalyses: docsRes.data.filter(d => d.processingStatus === 'COMPLETED').length,
-        highRiskDocuments: riskRes.data.filter(a => a.overallRiskLevel === 'HIGH' || a.overallRiskLevel === 'CRITICAL').length,
-        pendingReviews: riskRes.data.filter(a => !a.reviewed).length
+        highRiskDocuments: docsRes.data.filter(d => {
+          const riskAnalysis = getRiskAnalysisForDocument(d.id, docsRes.data, pendingRes.data);
+          return riskAnalysis && (riskAnalysis.overallRiskLevel === 'HIGH' || riskAnalysis.overallRiskLevel === 'CRITICAL');
+        }).length,
+        pendingReviews: pendingRes.data.length
       });
     } catch (error) {
       toast.error('Failed to load dashboard: ' + error.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const getRiskAnalysisForDocument = (docId, allDocs, pendingAnalyses) => {
+    return pendingAnalyses.find(a => a.document?.id === docId) || null;
+  };
+
+  const getReviewStatus = (docId) => {
+    const pendingAnalysis = analyses.find(a => a.document?.id === docId);
+    if (!pendingAnalysis) {
+      return { status: 'Not Analyzed', color: '#9ca3af' };
+    }
+    if (pendingAnalysis.reviewed) {
+      return { status: 'Reviewed', color: '#16a34a' };
+    }
+    return { status: 'Pending Review', color: '#ea580c' };
   };
 
   const getStatusColor = (status) => {
@@ -104,11 +119,6 @@ function DashboardPage({ userRole }) {
         <Link to="/upload" className="action-button primary">
           + Upload New Document
         </Link>
-        {userRole === 'ADMIN' && (
-          <button className="action-button secondary" onClick={TODO_MANAGE_USERS}>
-            👥 Manage Users
-          </button>
-        )}
       </div>
 
       <div className="dashboard-tables">
@@ -121,46 +131,58 @@ function DashboardPage({ userRole }) {
                   <th>File Name</th>
                   <th>Type</th>
                   <th>Status</th>
+                  <th>Review Status</th>
                   <th>Uploaded</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {documents.slice(0, 10).map((doc) => (
-                  <tr key={doc.id}>
-                    <td>{doc.fileName}</td>
-                    <td>{doc.documentType}</td>
-                    <td>
-                      <span
-                        className="status-badge"
-                        style={{ backgroundColor: getStatusColor(doc.processingStatus) }}
-                      >
-                        {doc.processingStatus}
-                      </span>
-                    </td>
-                    <td>{new Date(doc.createdAt).toLocaleDateString()}</td>
-                    <td>
-                      <Link to={`/results/${doc.id}`} className="view-link">
-                        View
-                      </Link>
-                      <button 
-                        onClick={() => deleteDocument(doc.id)} 
-                        className="delete-link"
-                        style={{ marginLeft: '10px', color: '#dc2626', cursor: 'pointer', border: 'none', background: 'none', textDecoration: 'underline' }}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {documents.slice(0, 10).map((doc) => {
+                  const reviewStatus = getReviewStatus(doc.id);
+                  return (
+                    <tr key={doc.id}>
+                      <td>{doc.fileName}</td>
+                      <td>{doc.documentType}</td>
+                      <td>
+                        <span
+                          className="status-badge"
+                          style={{ backgroundColor: getStatusColor(doc.processingStatus) }}
+                        >
+                          {doc.processingStatus}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className="status-badge"
+                          style={{ backgroundColor: reviewStatus.color }}
+                        >
+                          {reviewStatus.status}
+                        </span>
+                      </td>
+                      <td>{new Date(doc.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        <Link to={`/results/${doc.id}`} className="view-link">
+                          View
+                        </Link>
+                        <button 
+                          onClick={() => deleteDocument(doc.id)} 
+                          className="delete-link"
+                          style={{ marginLeft: '10px', color: '#dc2626', cursor: 'pointer', border: 'none', background: 'none', textDecoration: 'underline' }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
 
-        {userRole === 'ADMIN' && (
+        {analyses.length > 0 && (
           <div className="table-section">
-            <h2>Pending Reviews</h2>
+            <h2>My Pending Reviews</h2>
             <div className="table-container">
               <table className="reviews-table">
                 <thead>
@@ -169,7 +191,7 @@ function DashboardPage({ userRole }) {
                     <th>Risk Level</th>
                     <th>Score</th>
                     <th>Framework</th>
-                    <th>Action</th>
+                    {userRole === 'ADMIN' && <th>Action</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -183,11 +205,13 @@ function DashboardPage({ userRole }) {
                       </td>
                       <td>{(analysis.riskScore * 100).toFixed(0)}%</td>
                       <td>{analysis.framework}</td>
-                      <td>
-                        <button onClick={() => TODO_APPROVE_REVIEW(analysis.id)} className="approve-btn">
-                          Approve
-                        </button>
-                      </td>
+                      {userRole === 'ADMIN' && (
+                        <td>
+                          <button onClick={() => TODO_APPROVE_REVIEW(analysis.id)} className="approve-btn">
+                            Approve
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -198,22 +222,6 @@ function DashboardPage({ userRole }) {
       </div>
     </div>
   );
-}
-
-function TODO_GET_CURRENT_USER_ID() {
-  return 1;
-}
-
-function TODO_FETCH_USER_DOCUMENTS() {
-}
-
-function TODO_FETCH_RISK_ANALYSES() {
-}
-
-function TODO_CALCULATE_DASHBOARD_STATISTICS() {
-}
-
-function TODO_MANAGE_USERS() {
 }
 
 function TODO_APPROVE_REVIEW(analysisId) {

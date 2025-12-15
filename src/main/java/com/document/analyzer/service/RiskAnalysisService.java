@@ -92,6 +92,10 @@ public class RiskAnalysisService {
         return riskAnalysisRepository.findByReviewedByUserId(userId);
     }
 
+    public List<RiskAnalysis> getPendingReviewsForUser(Long userId) {
+        return riskAnalysisRepository.findByDocumentUploadedByIdAndReviewedFalse(userId);
+    }
+
     private float calculateRiskScore(Document document) {
         String fileName = document.getFileName() != null ? document.getFileName().toLowerCase() : "";
         String content = document.getExtractedText() != null ? document.getExtractedText().toLowerCase() : "";
